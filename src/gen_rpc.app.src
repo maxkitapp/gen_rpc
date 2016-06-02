@@ -46,7 +46,13 @@
         %% Inactivity timeout for server gen_server
         {server_inactivity_timeout, infinity},
         %% Orphan async call process timeout
-        {async_call_inactivity_timeout, infinity}
+        {async_call_inactivity_timeout, infinity},
+        %% Enable SSL connectivity
+        {ssl, false},
+        %% Extra SSL client options
+        {ssl_client_options, []},
+        %% Extra SSL server options
+        {ssl_server_options, []}
     ]},
     {modules, []}]
 }.

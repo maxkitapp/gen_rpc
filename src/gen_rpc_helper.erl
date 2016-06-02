@@ -19,6 +19,7 @@
         set_sock_opt/2,
         make_process_name/2,
         extract_node_name/1,
+        get_ssl_options/0,
         get_remote_tcp_server_port/1,
         get_connect_timeout/0,
         get_send_timeout/1,
@@ -41,6 +42,15 @@ otp_release() ->
             %% Since we only use this function to test the availability
             %% of the show_econnreset feature, 16 is good enough.
             16
+    end.
+
+-spec default_ssl_opts([ssl:option()]) -> [ssl:option()].
+default_ssl_opts(UserOpts) when is_list(UserOpts) ->
+    case otp_release() >= 18 of
+        true ->
+            [{show_econnreset, true}|DefaultTcpOpts];
+        false ->
+            DefaultTcpOpts
     end.
 
 -spec default_tcp_opts([gen_tcp:option()]) -> [gen_tcp:option()].
@@ -117,6 +127,13 @@ extract_node_name(PidName) when is_atom(PidName) ->
     %% gen_rpc.client.(node name) which is 15 chars long
     PidStr = atom_to_list(PidName),
     list_to_atom(lists:nthtail(15, PidStr)).
+
+%% Retrieves the default connect timeout
+-spec get_ssl_options() -> {boolean(), list()}.
+get_ssl_options() ->
+    {ok, Ssl} = application:get_env(?APP, ssl),
+    {ok, SslOpts} = application:get_env(?APP, ssl_options),
+    {Ssl, SslOpts}.
 
 %% Retrieves the default connect timeout
 -spec get_connect_timeout() -> timeout().

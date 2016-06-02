@@ -223,8 +223,7 @@ init({Node}) ->
     case connect_to_tcp_server(Node) of
         {ok, IpAddress, Port} ->
             ok = lager:debug("event=remote_server_started_successfully server_node=\"~s\" remote_port=\"~B\"", [Node, Port]),
-            ConnTO = gen_rpc_helper:get_connect_timeout(),
-            case gen_tcp:connect(IpAddress, Port, gen_rpc_helper:default_tcp_opts(?DEFAULT_TCP_OPTS), ConnTO) of
+            case connect_to_server(IpAddress, Port) of
                 {ok, Socket} ->
                     ok = lager:debug("event=connecting_to_server server_node=\"~s\" peer=\"~s\" result=success",
                                      [Node, gen_rpc_helper:peer_to_string({IpAddress, Port})]),
@@ -368,6 +367,16 @@ connect_to_tcp_server(Node) ->
         {error, Reason} ->
             ok = lager:error("event=connecting_to_server peer=\"~s\" result=failure reason=\"~p\"", [Node, Reason]),
             {error, Reason}
+    end.
+
+connect_to_server(IpAddress, Port) ->
+    {Ssl, SslOpts} = gen_rpc_helper:get_ssl_options(),
+    ConnTO = gen_rpc_helper:get_connect_timeout(),
+    case Ssl of
+        true ->
+            ssl:connect(IpAddress, Port, gen_rpc_helper:default_ssl_opts(SslOpts), ConnTO);
+        false ->
+            gen_tcp:connect(IpAddress, Port, gen_rpc_helper:default_tcp_opts(?DEFAULT_TCP_OPTS), ConnTO)
     end.
 
 get_node_port(Socket, IpAddress) ->

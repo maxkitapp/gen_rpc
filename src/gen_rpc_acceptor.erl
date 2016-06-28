@@ -10,7 +10,7 @@
 -author("Panagiotis Papadomitsos <pj@ezgr.net>").
 
 %%% Behaviour
--behaviour(gen_fsm).
+-behaviour(gen_statem).
 
 %%% Include this library's name macro
 -include("app.hrl").

@@ -202,9 +202,21 @@ call_worker(Server, CallType, M, F, A, Caller) ->
     % See call_MFA_undef test.
     Ret = try erlang:apply(M, F, A)
           catch
-               throw:Term -> Term;
-               exit:Reason -> {badrpc, {'EXIT', Reason}};
-               error:Reason -> {badrpc, {'EXIT', {Reason, erlang:get_stacktrace()}}}
+              throw:Term ->
+                  Stack = erlang:get_stacktrace(),
+                  lager:error("Error: ErrTag=~p, Reason=~p, Stack=~p~n", [throw, Term, Stack]),
+                  lz_gens_bug_reporter:report_bug(Term, Stack),
+                  Term;
+              exit:Reason ->
+                  Stack = erlang:get_stacktrace(),
+                  lager:error("Error: ErrTag=~p, Reason=~p, Stack=~p~n", [exit, Reason, Stack]),
+                  lz_gens_bug_reporter:report_bug(Reason, Stack),
+                  {badrpc, {'EXIT', Reason}};
+              error:Reason ->
+                  Stack = erlang:get_stacktrace(),
+                  lager:error("Error: ErrTag=~p, Reason=~p, Stack=~p~n", [error, Reason, Stack]),
+                  lz_gens_bug_reporter:report_bug(Reason, Stack),
+                  {badrpc, {'EXIT', {Reason, erlang:get_stacktrace()}}}
           end,
     Server ! {CallType, Caller, Ret}.
 
